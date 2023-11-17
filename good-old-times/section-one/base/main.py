@@ -21,6 +21,7 @@ def touchopen(filename, *args, **kwargs):
 
 data = []
 
+# 前半
 f = open('../stop_words.txt')
 data = [f.read(1024).split(',')]
 f.close()
@@ -96,6 +97,26 @@ word_freqs.flush()
 del data[:]
 
 # 最初の25要素は、頻出25単語用に開けておく
+data = data + [[]]*(25 - len(data))
+data.append('') # data[25]は、ファイルに格納された単語、頻度の行
+data.append(0) # data[26]は、頻度部分
 
+# 2次記憶ファイルの行ごとにループ
+while True:
+    data[25] = str(word_freqs.readline().strip(), 'utf-8')
+    if data[25] == '': # EoF
+        break
+    data[26] = int(data[25].split(',')[1])
+    data[25] = data[25].split(',')[0].strip()
 
+    for i in range(25):
+        if data[i] == [] or data[i][1] < data[26]:
+            data.insert(i, [data[25], data[26]])
+            del data[26]
+            break
 
+for tf in data[0:25]:
+    if len(tf) == 2:
+        print(tf[0], '-', tf[1])
+
+word_freqs.close()
